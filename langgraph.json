@@ -1,0 +1,7 @@
+{
+  "dependencies": ["."],
+  "graphs": {
+    "scamshield": "./scamshield/graph.py:graph"
+  },
+  "env": ".env"
+}

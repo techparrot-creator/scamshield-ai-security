@@ -1,0 +1,24 @@
+{"id": "pair-otp-benign-en", "pair": "otp-direction", "language": "English", "expected": "legitimate", "text": "Your verification code is 123456. Do not share it with anyone."}
+{"id": "pair-otp-scam-en", "pair": "otp-direction", "language": "English", "expected": "scam", "text": "Send me the verification code you just received so I can confirm your account."}
+{"id": "pair-google-legit-en", "pair": "google-notice", "language": "English", "expected": "legitimate", "text": "Google security alert: a new sign-in was detected on Chrome for Windows. If this was you, no action is needed. If you do not recognize this activity, please review your account security settings."}
+{"id": "pair-google-fake-en", "pair": "google-notice", "language": "English", "expected": "scam", "text": "This is Google Support. Your account will be permanently deleted in 24 hours. Call us immediately on this number to verify your password and save your account."}
+{"id": "pair-job-legit-en", "pair": "job-offer", "language": "English", "expected": "legitimate", "text": "Hello, we reviewed your CV and would like to invite you to a formal interview for the software engineer role on Thursday at our office. Please confirm your availability."}
+{"id": "pair-job-scam-en", "pair": "job-offer", "language": "English", "expected": "scam", "text": "Congratulations, you are hired! Earn PKR 20,000 daily from home. Deposit a registration fee of PKR 3,000 today to activate your job account."}
+{"id": "pair-txn-legit-en", "pair": "transaction-alert", "language": "English", "expected": "legitimate", "text": "Transaction alert: PKR 2,500 was debited from your account at 14:32. If you did not make this transaction, contact your bank helpline from the number printed on your card."}
+{"id": "pair-txn-scam-en", "pair": "transaction-alert", "language": "English", "expected": "scam", "text": "Your transaction was blocked for security reasons. To release the funds immediately, share your PIN and the OTP you just received."}
+{"id": "pair-delivery-legit-en", "pair": "delivery-notice", "language": "English", "expected": "legitimate", "text": "Your parcel is out for delivery today. The courier will call you when they are nearby."}
+{"id": "pair-delivery-scam-en", "pair": "delivery-notice", "language": "English", "expected": "scam", "text": "Your package is on hold at customs. Pay a PKR 1,500 clearance fee at this link within 2 hours or it will be destroyed: https://bit.ly/customs-clearance-pay"}
+{"id": "otp-bank-roman-ur", "language": "Roman Urdu", "expected": "scam", "text": "Assalam o Alaikum, main bank security team se hun. Apna OTP foran bhejein warna account block ho jayega."}
+{"id": "service-code-roman-ur", "language": "Roman Urdu", "expected": "legitimate", "text": "Aap ka OTP 558899 hai. Is code ko kisi se share na karein. Agar aap ne request nahi ki to is message ko ignore karein."}
+{"id": "job-fee-roman-ur", "language": "Roman Urdu", "expected": "scam", "text": "Ghar bethain daily 20,000 kamayein. Sirf registration fee 2,500 JazzCash par bhej dein aur kaam foran shuru karein."}
+{"id": "delivery-fee-roman-ur", "language": "Roman Urdu", "expected": "scam", "text": "Aap ka parcel customs mein phansa hua hai. 2 ghantay ke andar 1,500 rupay clearance fee bhejein warna parcel wapas chala jayega."}
+{"id": "txn-info-roman-ur", "language": "Roman Urdu", "expected": "legitimate", "text": "Aap ki Easypaisa transaction kamyab hui. Rs. 500 send ho gaye. Kisi action ki zaroorat nahi hai."}
+{"id": "otp-bank-ur", "language": "Urdu", "expected": "scam", "text": "ہم بینک سیکیورٹی ٹیم سے ہیں۔ اپنا او ٹی پی فوراً بھیجیں ورنہ آپ کا اکاؤنٹ بلاک ہو جائے گا۔"}
+{"id": "service-code-ur", "language": "Urdu", "expected": "legitimate", "text": "آپ کا تصدیقی کوڈ 558899 ہے۔ اس کوڈ کو کسی سے شیئر نہ کریں۔"}
+{"id": "prize-fee-ur", "language": "Urdu", "expected": "scam", "text": "مبارک ہو! آپ نے انعام جیتا ہے۔ انعام حاصل کرنے کے لیے پہلے 500 روپے فیس ادا کریں۔"}
+{"id": "statement-info-en", "language": "English", "expected": "legitimate", "text": "Your monthly account statement is now available in your banking app under the Documents section."}
+{"id": "friend-plan-roman-ur", "language": "Roman Urdu", "expected": "legitimate", "text": "Kal milte hain chai par, office ke baad free ho?"}
+{"id": "ambiguous-money-en", "language": "English", "expected": "insufficient", "text": "Hey, are you free tomorrow? We need to talk about the money."}
+{"id": "ambiguous-confirm-en", "language": "English", "expected": "insufficient", "text": "Please confirm your details so we can proceed."}
+{"id": "ambiguous-roman-ur", "language": "Roman Urdu", "expected": "insufficient", "text": "Bhai, wo kaam ho gaya? Paise kab bhej rahe ho?"}
+{"id": "ambiguous-verify-ur", "language": "Urdu", "expected": "insufficient", "text": "براہ کرم اپنی معلومات کی تصدیق کریں۔"}

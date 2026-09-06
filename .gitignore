@@ -1,0 +1,38 @@
+.venv/
+.env
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.chroma/
+chroma_db/
+reports/
+.DS_Store
+
+# Qoder / local runtime generated data
+chroma_db/
+.chroma/
+reports/
+scamshield-reports/
+*.log
+
+# Generated evaluation reports (benchmark dataset itself IS committed)
+data/evaluation/results/
+
+# Environment / secrets
+.env.*
+!.env.example
+
+# Local IDE / Qoder files
+.qoder/
+.qoderignore
+qoder_tasks/
+QODER_START_HERE.md
+
+# Python build metadata
+*.egg-info/
+
+# Local multimodal test files
+scam_voice.wav
+image_test.png.PNG

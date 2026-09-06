@@ -1,0 +1,141 @@
+[
+  {
+    "id": "nccia-reporting",
+    "title": "NCCIA cybercrime complaint portal",
+    "organization": "National Cyber Crime Investigation Agency (NCCIA)",
+    "source": "https://complaint.nccia.gov.pk/",
+    "country": "Pakistan",
+    "primary_topic": "reporting",
+    "tags": ["reporting", "online fraud", "cybercrime", "blackmail", "harassment", "payment_fraud"],
+    "reviewed_at": "2026-08-28",
+    "summary": "Pakistan's NCCIA provides an official online complaint registration channel for cybercrime cases.",
+    "sections": [
+      {"id": "preserve-evidence", "title": "Preserve evidence", "text": "Before reporting, keep copies of suspicious messages, screenshots, sender identifiers, URLs, dates, transaction references, and other evidence. Avoid deleting the original evidence until copies are preserved."},
+      {"id": "submit-complaint", "title": "Submit an official complaint", "text": "Use the official NCCIA complaint portal for cybercrime complaints in Pakistan. Provide accurate incident details and supporting evidence. ScamShield should never claim that submitting a complaint guarantees investigation or recovery."},
+      {"id": "financial-loss", "title": "Financial-loss response", "text": "When money was transferred, contact the bank, card issuer, wallet, or payment provider immediately in addition to preserving evidence and reporting the cybercrime."}
+    ]
+  },
+  {
+    "id": "pkcert-phishing",
+    "title": "National CERT guidance on phishing",
+    "organization": "PKCERT / National CERT Pakistan",
+    "source": "https://pkcert.gov.pk/abc-program/stay-secure-against-phishing.asp",
+    "country": "Pakistan",
+    "primary_topic": "phishing",
+    "tags": ["phishing", "email", "sms", "links", "attachments", "credentials", "impersonation"],
+    "reviewed_at": "2026-08-28",
+    "summary": "National CERT Pakistan publishes public guidance for recognizing and reducing phishing risk.",
+    "sections": [
+      {"id": "warning-signs", "title": "Phishing warning signs", "text": "Treat unexpected requests for credentials, financial information, attachments, or urgent account action as suspicious. Branding and familiar names do not prove authenticity."},
+      {"id": "safe-verification", "title": "Verify independently", "text": "Do not use contact details or links supplied in a suspicious message. Verify the organization through an independently known official website, app, phone number, or other trusted channel."},
+      {"id": "protect-account", "title": "Protect accounts", "text": "Use strong unique passwords and multi-factor authentication. If credentials may have been exposed, change them from a trusted device and review account sessions."}
+    ]
+  },
+  {
+    "id": "pkcert-whatsapp-2026",
+    "title": "WhatsApp Account Hijacking Campaign advisory",
+    "organization": "PKCERT / National CERT Pakistan",
+    "source": "https://pkcert.gov.pk/advisory/26/1.pdf",
+    "country": "Pakistan",
+    "primary_topic": "whatsapp_hijack",
+    "tags": ["whatsapp", "otp_account_takeover", "qr code", "call forwarding", "phishing", "account takeover"],
+    "reviewed_at": "2026-08-28",
+    "summary": "A 2026 National CERT advisory describes social-engineering paths used to hijack WhatsApp accounts, including verification-code theft, call forwarding, phishing, and QR-code manipulation.",
+    "sections": [
+      {"id": "otp", "title": "Verification-code theft", "text": "Attackers may impersonate a trusted contact, support staff, or service provider and ask for a WhatsApp verification code. Do not share the code with another person."},
+      {"id": "qr", "title": "QR-code and linked-device abuse", "text": "Treat unexpected QR-code scanning instructions as high risk because they may link an attacker's device or enable unauthorized access."},
+      {"id": "recovery", "title": "Account recovery", "text": "If takeover is suspected, use WhatsApp's official recovery and security controls, review linked devices, strengthen account protection, and warn trusted contacts about possible impersonation."}
+    ]
+  },
+  {
+    "id": "pkcert-online-transactions",
+    "title": "Secure online transaction guidance",
+    "organization": "PKCERT / National CERT Pakistan",
+    "source": "https://pkcert.gov.pk/abc-program/secure-online-transactions.asp",
+    "country": "Pakistan",
+    "primary_topic": "payment_fraud",
+    "tags": ["payment", "bank", "wallet", "online transaction", "otp", "verification"],
+    "reviewed_at": "2026-08-28",
+    "summary": "National CERT Pakistan maintains public guidance for safer online transactions.",
+    "sections": [
+      {"id": "before-paying", "title": "Before paying", "text": "Pause when a sender creates urgency. Verify the merchant or recipient independently, check the exact destination, and do not disclose OTPs, PINs, passwords, or recovery codes."},
+      {"id": "after-suspicious-payment", "title": "After a suspicious payment", "text": "Preserve the payment record and contact the relevant financial institution or payment service promptly. Ask about available fraud or reversal procedures without assuming recovery is guaranteed."}
+    ]
+  },
+  {
+    "id": "pkcert-job-scams",
+    "title": "Combatting job scams",
+    "organization": "PKCERT / National CERT Pakistan",
+    "source": "https://pkcert.gov.pk/abc-program/job-scams.asp",
+    "country": "Pakistan",
+    "primary_topic": "job_scam",
+    "tags": ["job", "recruiter", "employment", "registration fee", "task scam", "work from home"],
+    "reviewed_at": "2026-08-28",
+    "summary": "National CERT Pakistan includes job-scam awareness in its public cyber-safety program.",
+    "sections": [
+      {"id": "red-flags", "title": "Job-scam red flags", "text": "Unexpected recruiter messages, unrealistic pay, vague duties, pressure to move to messaging apps, requests for fees, or requests for sensitive identity information should be treated cautiously."},
+      {"id": "verification", "title": "Verify the employer", "text": "Check the employer through its independently located official website and published contact channels. Do not rely only on logos, screenshots, or contact details sent by the recruiter."}
+    ]
+  },
+  {
+    "id": "ftc-recovery",
+    "title": "What to do if you were scammed",
+    "organization": "U.S. Federal Trade Commission",
+    "source": "https://consumer.ftc.gov/articles/what-do-if-you-were-scammed",
+    "country": "General",
+    "primary_topic": "recovery",
+    "tags": ["recovery", "payment_fraud", "bank", "card", "payment app", "credentials", "remote access"],
+    "reviewed_at": "2026-08-28",
+    "summary": "FTC consumer guidance explains immediate recovery actions after payments, credential disclosure, or device access in scam incidents.",
+    "sections": [
+      {"id": "payment", "title": "If you paid", "text": "Contact the bank, card issuer, payment app, transfer service, or other payment provider promptly, report the fraudulent transaction, and ask whether it can be stopped, reversed, or refunded."},
+      {"id": "credentials", "title": "If you shared account credentials", "text": "Change exposed passwords from a trusted device, change reused passwords elsewhere, enable two-factor authentication, and review account access."},
+      {"id": "remote-access", "title": "If someone accessed your device", "text": "Update security software, scan the device, remove identified threats, change passwords, enable stronger authentication, and review financial or online accounts for unauthorized activity."}
+    ]
+  },
+  {
+    "id": "ftc-job-scams",
+    "title": "Job scams",
+    "organization": "U.S. Federal Trade Commission",
+    "source": "https://consumer.ftc.gov/articles/job-scams",
+    "country": "General",
+    "primary_topic": "job_scam",
+    "tags": ["job", "recruiter", "fake check", "work from home", "task scam", "fee"],
+    "reviewed_at": "2026-08-28",
+    "summary": "FTC guidance highlights common job-scam patterns, especially payment demands, fake checks, and unrealistic earnings.",
+    "sections": [
+      {"id": "pay-to-work", "title": "Pay-to-work warning", "text": "A job offer that requires payment to obtain the job, training, certification, equipment, or access is a strong warning sign. Verify employers independently before sharing personal information."},
+      {"id": "fake-check", "title": "Fake-check pattern", "text": "Be cautious when an employer sends a check and instructs you to send part of the money elsewhere or buy gift cards. A check can appear available before it is later identified as fraudulent."}
+    ]
+  },
+  {
+    "id": "ftc-investment-scams",
+    "title": "Investment scams",
+    "organization": "U.S. Federal Trade Commission",
+    "source": "https://consumer.ftc.gov/articles/investment-scams",
+    "country": "General",
+    "primary_topic": "investment_scam",
+    "tags": ["investment", "crypto", "forex", "guaranteed return", "social media", "profit"],
+    "reviewed_at": "2026-08-28",
+    "summary": "FTC guidance warns that investment scams commonly promise large or easy returns with little risk and may start through social media or messaging.",
+    "sections": [
+      {"id": "promises", "title": "Unrealistic promises", "text": "Promises of guaranteed profit, unusually high returns, little or no risk, secret systems, or pressure to act quickly are major investment-scam indicators."},
+      {"id": "research", "title": "Independent research", "text": "Research the company, person, platform, and investment independently. Do not rely on testimonials, screenshots of profits, or dashboards supplied by the promoter."}
+    ]
+  },
+  {
+    "id": "ftc-romance-scams",
+    "title": "Romance scams",
+    "organization": "U.S. Federal Trade Commission",
+    "source": "https://consumer.ftc.gov/articles/what-know-about-romance-scams",
+    "country": "General",
+    "primary_topic": "romance_scam",
+    "tags": ["romance", "dating", "relationship", "money request", "crypto", "emergency"],
+    "reviewed_at": "2026-08-28",
+    "summary": "FTC consumer guidance describes romance scammers who build trust online and later request money or introduce fraudulent investment opportunities.",
+    "sections": [
+      {"id": "pattern", "title": "Relationship-to-money pattern", "text": "A person met online may quickly move communication off-platform, claim to be far away, build emotional trust, and later ask for money for emergencies, travel, or investment."},
+      {"id": "protect", "title": "Protect yourself", "text": "Slow the interaction down, discuss the situation with someone you trust, independently verify claims, and do not send money or cryptocurrency to someone you have only met online."}
+    ]
+  }
+]

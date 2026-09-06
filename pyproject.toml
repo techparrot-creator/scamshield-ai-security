@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools>=75", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "scamshield-ai"
+version = "1.0.0"
+description = "Bilingual multimodal scam investigation and recovery agent built with LangGraph, Gradio, Gemini, Hugging Face embeddings, ChromaDB, and advanced RAG."
+requires-python = ">=3.11,<3.14"
+dependencies = [
+  "langgraph>=1.0,<2",
+  "langgraph-cli[inmem]>=0.4,<1",
+  "langchain-core>=1.0,<2",
+  "langchain-google-genai>=4.0,<5",
+  "google-genai>=2.0,<3",
+  "python-dotenv>=1.0,<2",
+  "pydantic>=2.7,<3",
+  "gradio>=6.0,<7",
+  "sentence-transformers>=3.3,<6",
+  "huggingface-hub>=0.27,<2",
+  "chromadb>=1.0,<2",
+  "rank-bm25>=0.2.2,<1",
+  "numpy>=1.26,<3"
+]
+
+[tool.setuptools.packages.find]
+include = ["scamshield*"]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]
