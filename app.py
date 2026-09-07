@@ -564,7 +564,24 @@ body { font-family: "Inter", "Segoe UI", system-ui, "Noto Naskh Arabic", "Noto N
 .gradio-container .table-wrap { overflow-x: auto; }
 .gradio-container table { font-size: .85rem; }
 .gradio-container .gradio-container { max-width: none !important; }
-.ss-examples { font-size: .82rem; opacity: .92; }
+/* ---------- Demo example cards ---------- */
+.ss-example-card { gap: 6px; }
+.gradio-container button.ss-example-btn,
+.gradio-container .ss-example-btn button {
+  width: 100%; text-align: left; justify-content: flex-start; white-space: normal;
+  background: #101f36 !important; color: #dbe8f8 !important;
+  border: 1px solid #24385a !important; border-radius: 11px !important;
+  font-weight: 700; font-size: .88rem; padding: 10px 13px;
+}
+.gradio-container button.ss-example-btn:hover,
+.gradio-container .ss-example-btn button:hover {
+  border-color: #22d3ee !important; background: #14294a !important; color: #f1f6fd !important;
+}
+.ss-example-desc {
+  font-size: .78rem; line-height: 1.45; color: #8fa3bf;
+  padding: 0 3px 2px 3px; overflow-wrap: anywhere;
+}
+.ss-example-note { font-size: .8rem; color: #8fa3bf; margin: 0 0 8px 2px; }
 
 /* ---------- Responsive ---------- */
 @media (max-width: 1024px) {
@@ -659,6 +676,30 @@ DEMO_EXAMPLES = [
         False, False, False, False,
     ],
 ]
+
+# Compact card labels, parallel to DEMO_EXAMPLES. The raw sample text is never
+# shown in the UI — a click loads it straight into the existing input fields.
+DEMO_EXAMPLE_CARDS = (
+    ("🏦 Bank OTP impersonation", "A fake 'bank security team' demands your code and threatens to block the account."),
+    ("💼 Fake job offer", "Too-good-to-be-true home earnings that ask for an upfront 'training fee'."),
+    ("✅ Legitimate verification code", "A genuine one-time code notice that never asks you to share it."),
+    ("🎣 Phishing email / link", "Fictional bank alert with a look-alike link on a reserved .example domain."),
+)
+assert len(DEMO_EXAMPLE_CARDS) == len(DEMO_EXAMPLES), "one card label per demo example"
+
+
+def _example_loader(index: int):
+    """Build the zero-argument callback that fills the form with one demo example.
+
+    Returns every input in build_demo's `inputs` order, including the example's
+    own response language and optional context; all exposure flags stay False.
+    """
+
+    def load_demo_example():
+        return tuple(DEMO_EXAMPLES[index])
+
+    load_demo_example.__name__ = f"load_demo_example_{index + 1}"
+    return load_demo_example
 
 
 def build_demo() -> gr.Blocks:
@@ -793,16 +834,31 @@ def build_demo() -> gr.Blocks:
         analyze_button.click(fn=analyze_submission, inputs=inputs, outputs=outputs, show_progress="full")
         clear_button.click(fn=clear_form, inputs=[], outputs=inputs + outputs)
 
-        with gr.Column(elem_classes=["ss-examples"]):
-            gr.Examples(
-                examples=DEMO_EXAMPLES,
-                inputs=inputs,
-                cache_examples=False,
-                label=(
-                    "Demo examples (OTP/bank impersonation · fake job · legitimate security notification · "
-                    "fictional phishing email — reserved .example domains only)"
-                ),
+        # ---- 9. Demo examples (compact cards, collapsed by default) ---------------
+        # The raw sample text is never rendered as a table or dataset grid; each
+        # card only fills the existing input fields, so this section can wrap and
+        # never forces horizontal scrolling.
+        with gr.Accordion("🎯 Demo examples — load a sample case", open=False):
+            gr.HTML(
+                "<div class='ss-example-note'>Pick a sample to fill the form above. Every sample is fictional and "
+                "safe, and all exposure flags stay off. Nothing is analyzed until you press “Analyze safely”.</div>"
             )
+            with gr.Row(equal_height=True):
+                for index, (card_title, card_description) in enumerate(DEMO_EXAMPLE_CARDS):
+                    with gr.Column(scale=1, min_width=230, elem_classes=["ss-example-card"]):
+                        example_button = gr.Button(
+                            card_title,
+                            size="sm",
+                            variant="secondary",
+                            elem_classes=["ss-example-btn"],
+                        )
+                        gr.HTML(f"<div class='ss-example-desc'>{escape(card_description)}</div>")
+                    example_button.click(
+                        fn=_example_loader(index),
+                        inputs=[],
+                        outputs=inputs,
+                        api_name=False,
+                    )
     return demo
 
 
