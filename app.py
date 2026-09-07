@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import json
+import logging
 import os
 import tempfile
 from html import escape
@@ -12,14 +14,29 @@ from scamshield.graph import AI_STATUS_MESSAGES, graph
 from scamshield.llm_client import GeminiServiceError
 from scamshield.media import extract_media_evidence
 from scamshield.retrieval import rag_health
-from scamshield.trace import format_trace_rows, format_trace_steps
+from scamshield.trace import format_trace_steps
 
 load_dotenv()
+
+logger = logging.getLogger("scamshield.app")
+if not logger.handlers:
+    logging.basicConfig(level=os.getenv("SCAMSHIELD_LOG_LEVEL", "INFO").upper(), format="%(levelname)s %(name)s %(message)s")
 
 APP_TITLE = "ScamShield AI"
 DISCLAIMER = (
     "Decision support only. Do not submit passwords, OTPs, PINs, full card numbers, seed phrases, recovery codes, or private keys."
 )
+
+# Cross-platform runtime report directory. Never a hard-coded absolute path, and
+# created on demand so a fresh Linux / Hugging Face Space container works as-is.
+REPORT_DIR = Path(
+    os.getenv("SCAMSHIELD_REPORT_DIR") or Path(tempfile.gettempdir()) / "scamshield-reports"
+)
+
+# Callback arity contract. `analyze_submission` returns OUTPUT_COUNT values and
+# `clear_form` returns INPUT_COUNT + OUTPUT_COUNT values, in build_demo's order.
+INPUT_COUNT = 10
+OUTPUT_COUNT = 9
 
 # Verdict wording never guarantees safety or criminality — it expresses likelihood only.
 VERDICT_BY_LEVEL = {
@@ -54,12 +71,54 @@ def _file_path(uploaded) -> str | None:
     return getattr(uploaded, "name", None)
 
 
+def _safe_case_id(case_id: str) -> str:
+    """Keep the generated case id filesystem-safe on Linux, Windows and macOS."""
+    cleaned = "".join(ch for ch in (case_id or "") if ch.isalnum() or ch in "-_")
+    return cleaned or "case"
+
+
 def _save_report(case_id: str, markdown: str) -> str:
-    out_dir = Path(tempfile.gettempdir()) / "scamshield-reports"
-    out_dir.mkdir(parents=True, exist_ok=True)
-    path = out_dir / f"{case_id}-report.md"
-    path.write_text(markdown, encoding="utf-8")
+    """Write the privacy-redacted report and return a path that really exists."""
+    REPORT_DIR.mkdir(parents=True, exist_ok=True)
+    path = REPORT_DIR / f"{_safe_case_id(case_id)}-report.md"
+    path.write_text(markdown or "", encoding="utf-8")
+    if not path.is_file():
+        raise gr.Error("The case report could not be written on the server. Please retry.")
     return str(path)
+
+
+def _runtime_summary(
+    *,
+    ai_status: str,
+    input_kind: str,
+    pipeline_trace: list[dict],
+    source_count: int,
+    retrieval_confidence: float,
+    risk_band: str,
+    report_generated: bool,
+) -> dict:
+    """Compact developer diagnostic — server-side only, never sent to the browser.
+
+    Holds counts, statuses and labels only: no API keys, no environment
+    variables, no raw prompts and no hidden model reasoning.
+    """
+    retrieval_executed = any(ev.get("stage") == "retrieval" for ev in pipeline_trace if isinstance(ev, dict))
+    multi_query_activated = any(
+        ev.get("stage") == "multi_query" and bool(ev.get("activated"))
+        for ev in pipeline_trace
+        if isinstance(ev, dict)
+    )
+    return {
+        "ai_status": ai_status,
+        "input_modality": input_kind,
+        "retrieval_executed": retrieval_executed,
+        "source_count": source_count,
+        "retrieval_confidence": round(float(retrieval_confidence), 4),
+        "multi_query_activated": multi_query_activated,
+        "trace_event_count": len(pipeline_trace),
+        "risk_band": risk_band,
+        "report_generated": report_generated,
+    }
 
 
 def _bullets(items: list[str], empty: str = "None provided.") -> str:
@@ -279,61 +338,83 @@ def analyze_submission(
 
     assessment = result.get("assessment")
     ai_status = result.get("ai_status", "completed")
-    verdict = _verdict_html(assessment, ai_status, result.get("retrieval_confidence", 0.0), result["case_id"])
+    case_id = result.get("case_id") or "SCAM-UNKNOWN"
+    retrieval_confidence = float(result.get("retrieval_confidence") or 0.0)
+    pipeline_trace = result.get("pipeline_trace") or []
+    guidance = result.get("retrieved_guidance") or []
+
+    verdict = _verdict_html(assessment, ai_status, retrieval_confidence, case_id)
     signals = _signals_html(assessment)
     actions_left, actions_right = _actions_markdown(
         assessment, clicked_link, sent_money, shared_secret, installed_remote_access
     )
-    guidance = result.get("retrieved_guidance", [])
     sources = _sources_html(guidance)
+    # Real retrieved RAG metadata only — every cell is coerced to the column type
+    # declared on the Dataframe so the grid can never blank out on a stray None.
     source_rows = [
         [
-            item.get("organization", ""),
-            item.get("title", ""),
-            item.get("section_title", ""),
-            item.get("country", ""),
-            item.get("retrieval_score", 0.0),
-            item.get("source", ""),
+            str(item.get("organization") or ""),
+            str(item.get("title") or ""),
+            str(item.get("section_title") or ""),
+            str(item.get("country") or ""),
+            float(item.get("retrieval_score") or 0.0),
+            str(item.get("source") or ""),
         ]
         for item in guidance
     ]
-    technical = {
-        "case_id": result["case_id"],
-        "ai_status": ai_status,
-        "risk": assessment,
-        "detected_urls": result.get("detected_urls", []),
-        "url_findings": result.get("url_findings", []),
-        "retrieval_hints": result.get("retrieval_hints", {}),
-        "query_variants": result.get("query_variants", []),
-        "retrieval_confidence": result.get("retrieval_confidence", 0.0),
-        "retrieval_strategy": result.get("retrieval_strategy", []),
-        "pipeline_trace": result.get("pipeline_trace", []),
-    }
+    trace_rows = format_trace_steps(pipeline_trace)
+    detail_markdown = result.get("response_markdown") or ""
+    report_path = _save_report(case_id, result.get("report_markdown") or "")
+
+    # Developer diagnostics stay server-side; nothing sensitive reaches the browser.
+    logger.info(
+        "runtime %s",
+        json.dumps(
+            _runtime_summary(
+                ai_status=ai_status,
+                input_kind=result.get("input_kind") or input_kind,
+                pipeline_trace=pipeline_trace,
+                source_count=len(source_rows),
+                retrieval_confidence=retrieval_confidence,
+                risk_band=str((assessment or {}).get("risk_level") or "not_produced"),
+                report_generated=bool(report_path),
+            ),
+            sort_keys=True,
+        ),
+    )
+
+    # Plain values in exactly the order of OUTPUT_COUNT registered outputs.
+    # No gr.update()/prop-update dicts: that deprecated path made Gradio rebuild
+    # each component with its value stripped, which is why the collapsed sections
+    # rendered empty even though the backend payload was correct.
     return (
         verdict,
         signals,
         actions_left,
         actions_right,
         sources,
-        gr.update(visible=True, value=source_rows),
-        result["response_markdown"],
-        gr.update(visible=True, value=format_trace_steps(result.get("pipeline_trace", []))),
-        gr.update(visible=True, value=format_trace_rows(result.get("pipeline_trace", []))),
-        gr.update(visible=True, value=technical),
-        gr.update(visible=True, value=_save_report(result["case_id"], result["report_markdown"])),
+        source_rows,
+        detail_markdown,
+        trace_rows,
+        report_path,
     )
 
 
 def clear_form():
+    """Reset every input and output. Plain values only, same order as the wiring."""
     return (
+        # ---- 10 inputs -------------------------------------------------------
         "", "", None, None, "Roman Urdu", "", False, False, False, False,
-        _empty_state_html(), "", "", "", "",
-        gr.update(visible=False, value=None),
-        "",
-        gr.update(visible=False, value=None),
-        gr.update(visible=False, value=None),
-        gr.update(visible=False, value=None),
-        gr.update(visible=False, value=None),
+        # ---- 9 outputs (must match OUTPUT_COUNT and the order in build_demo) --
+        _empty_state_html(),  # verdict_html
+        "",                   # signals_html
+        "",                   # actions_left
+        "",                   # actions_right
+        "",                   # sources_html
+        [],                   # sources_table
+        "",                   # result_markdown
+        [],                   # trace_steps
+        None,                 # report_file
     )
 
 
@@ -526,8 +607,59 @@ def _hero_html(system_ready: bool) -> str:
 
 
 # ---------------------------------------------------------------------------
-# UI
+# UI — demo examples
+#
+# Column order must match `inputs` in build_demo():
+# suspicious_text, link_email_text, screenshot_file, voice_file,
+# preferred_language, additional_context,
+# clicked_link, sent_money, shared_secret, installed_remote_access
+# Every host name below uses the RFC 2606 reserved `.example` TLD, so the
+# fictional phishing sample can never resolve to a real site.
 # ---------------------------------------------------------------------------
+
+FICTIONAL_PHISHING_EMAIL = (
+    "From: \"SecureBank Alert Team\" <no-reply@secure-bank-alert.example>\n"
+    "Subject: Urgent - your account will be locked within 2 hours\n"
+    "\n"
+    "Dear valued customer,\n"
+    "\n"
+    "We detected an unusual sign-in attempt on your account from an unrecognized device.\n"
+    "To keep your account active you must re-verify your identity right now through our\n"
+    "secure portal:\n"
+    "\n"
+    "    https://secure-bank-alert.example/verify-account?ref=8f31c2\n"
+    "\n"
+    "If verification is not completed within 2 hours your account will be permanently\n"
+    "locked and all pending transfers will be cancelled.\n"
+    "\n"
+    "Do not reply to this message.\n"
+    "SecureBank Security Operations"
+)
+
+DEMO_EXAMPLES = [
+    [
+        "Assalam o Alaikum, main bank security team se hun. Apna OTP foran bhejein warna account block ho jayega.",
+        "", None, None, "Roman Urdu", "WhatsApp par unknown number se aya.",
+        False, False, False, False,
+    ],
+    [
+        "We found your CV. Earn PKR 20,000 daily from home. Reply YES on WhatsApp and deposit a training fee to start.",
+        "", None, None, "English", "Unexpected recruiter message.",
+        False, False, False, False,
+    ],
+    [
+        "G-483920 is your Google verification code. Do not share this code with anyone.",
+        "", None, None, "English", "Arrived while I was signing in to my own account.",
+        False, False, False, False,
+    ],
+    [
+        "",
+        FICTIONAL_PHISHING_EMAIL, None, None, "English",
+        "Fictional sample email — arrived from an unknown sender with a look-alike link.",
+        False, False, False, False,
+    ],
+]
+
 
 def build_demo() -> gr.Blocks:
     diagnostics = rag_health()
@@ -600,6 +732,9 @@ def build_demo() -> gr.Blocks:
             actions_right = gr.Markdown("")
 
         # ---- 6. Verified RAG sources ---------------------------------------------
+        # These components are always rendered; the Accordion alone controls the
+        # collapse. Hiding the component itself (visible=False) required a
+        # gr.update() prop-update to reveal it, and that path dropped the value.
         gr.HTML("<div class='ss-section-title'>4 · Verified evidence used for this assessment</div>")
         sources_html = gr.HTML("")
         with gr.Accordion("Detailed source table", open=False):
@@ -608,7 +743,6 @@ def build_demo() -> gr.Blocks:
                 datatype=["str", "str", "str", "str", "number", "str"],
                 interactive=False,
                 wrap=True,
-                visible=False,
             )
         with gr.Accordion("Full assessment detail", open=False):
             result_markdown = gr.Markdown("")
@@ -618,26 +752,17 @@ def build_demo() -> gr.Blocks:
             gr.Markdown(
                 "Observable system-level events only — input modality, extraction status, indicator labels, retrieval "
                 "metrics (semantic, BM25, RRF/MMR, multi-query, parent context), and Gemini status. "
-                "Never raw secrets or hidden model reasoning."
+                "Never raw secrets or hidden model reasoning. Deeper developer diagnostics are written to the "
+                "server log only."
             )
             trace_steps = gr.Dataframe(
                 headers=["Pipeline step", "Status", "Observation"],
                 datatype=["str", "str", "str"],
                 interactive=False,
                 wrap=True,
-                visible=False,
             )
-            with gr.Accordion("Developer debug", open=False):
-                trace_rows_table = gr.Dataframe(
-                    headers=["Pipeline stage", "Observation"],
-                    datatype=["str", "str"],
-                    interactive=False,
-                    wrap=True,
-                    visible=False,
-                )
-                technical_json = gr.JSON(label="Structured analysis + retrieval trace", visible=False)
         with gr.Accordion("📄 Case report export", open=False):
-            report_file = gr.File(label="Privacy-redacted report", visible=False)
+            report_file = gr.File(label="Privacy-redacted report", interactive=False)
 
         # ---- 8. About the analysis --------------------------------------------------
         with gr.Accordion("ℹ️ About the analysis", open=False):
@@ -657,21 +782,26 @@ def build_demo() -> gr.Blocks:
         ]
         outputs = [
             verdict_html, signals_html, actions_left, actions_right, sources_html,
-            sources_table, result_markdown, trace_steps, trace_rows_table, technical_json, report_file,
+            sources_table, result_markdown, trace_steps, report_file,
         ]
+        # Fail loudly at build time if the callback contract ever drifts, instead
+        # of silently blanking half the UI at request time.
+        assert len(inputs) == INPUT_COUNT, f"expected {INPUT_COUNT} inputs, wired {len(inputs)}"
+        assert len(outputs) == OUTPUT_COUNT, f"expected {OUTPUT_COUNT} outputs, wired {len(outputs)}"
+        assert len(clear_form()) == INPUT_COUNT + OUTPUT_COUNT, "clear_form arity drifted"
+
         analyze_button.click(fn=analyze_submission, inputs=inputs, outputs=outputs, show_progress="full")
         clear_button.click(fn=clear_form, inputs=[], outputs=inputs + outputs)
 
         with gr.Column(elem_classes=["ss-examples"]):
             gr.Examples(
-                examples=[
-                    ["Assalam o Alaikum, main bank security team se hun. Apna OTP foran bhejein warna account block ho jayega.", "", None, None, "Roman Urdu", "WhatsApp par unknown number se aya.", False, False, False, False],
-                    ["We found your CV. Earn PKR 20,000 daily from home. Reply YES on WhatsApp and deposit a training fee to start.", "", None, None, "English", "Unexpected recruiter message.", False, False, False, False],
-                    ["G-483920 is your Google verification code. Do not share this code with anyone.", "", None, None, "English", "Arrived while I was signing in to my own account.", False, False, False, False],
-                ],
+                examples=DEMO_EXAMPLES,
                 inputs=inputs,
                 cache_examples=False,
-                label="Demo examples (OTP/bank impersonation · fake job · legitimate security notification)",
+                label=(
+                    "Demo examples (OTP/bank impersonation · fake job · legitimate security notification · "
+                    "fictional phishing email — reserved .example domains only)"
+                ),
             )
     return demo
 
@@ -679,9 +809,13 @@ def build_demo() -> gr.Blocks:
 demo = build_demo()
 
 if __name__ == "__main__":
+    REPORT_DIR.mkdir(parents=True, exist_ok=True)
     demo.queue(default_concurrency_limit=2, max_size=20).launch(
         server_name=os.getenv("GRADIO_SERVER_NAME", "0.0.0.0"),
         server_port=int(os.getenv("GRADIO_SERVER_PORT", "7860")),
         css=CSS,
         show_error=True,
+        # Lets gr.File serve the generated report on read-only-root Linux images
+        # such as Hugging Face Spaces, where /tmp is the writable location.
+        allowed_paths=[str(REPORT_DIR)],
     )
